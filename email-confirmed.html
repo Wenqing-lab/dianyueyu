@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>邮箱验证 - 点粤语</title>
+<meta name="description" content="点粤语 - 邮箱验证结果">
+<meta name="robots" content="noindex,nofollow">
+
+<style>
+:root{
+  --green:#2f8f4e;
+  --green2:#75d85a;
+  --bg:#f6faf4;
+  --text:#1f2937;
+  --muted:#667085;
+  --card:#ffffff;
+  --border:#e2ecdf;
+  --soft:#eef8ea;
+  --error:#fdecec;
+  --errorBorder:#f3b9b9;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.78 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif
+}
+header{
+  background:linear-gradient(135deg,#a8ef86,var(--green2));
+  padding:46px 20px 38px;color:#17351d
+}
+header .wrap,main,footer{max-width:920px;margin:auto}
+h1{font-size:34px;line-height:1.25;margin:0 0 8px}
+.subtitle{font-size:15px;color:#285233}
+main{padding:28px 20px 50px}
+section{
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:28px 26px;margin-bottom:18px;text-align:center
+}
+h2{font-size:22px;margin:0 0 14px;color:var(--green)}
+p{margin:9px 0}
+a{color:var(--green);text-decoration:none}
+.btn{
+  display:inline-block;background:var(--green);color:#fff;
+  padding:13px 26px;border-radius:12px;font-size:16px;
+  border:none;cursor:pointer;text-decoration:none;
+  margin-top:18px;font-weight:600
+}
+.btn:hover{background:#257640;text-decoration:none}
+.btnwrap{margin-top:10px}
+.icon{font-size:54px;line-height:1;margin-bottom:8px}
+.icon.success{color:var(--green)}
+.icon.fail{color:#d6483a}
+.muted{color:var(--muted);font-size:14px}
+.errbox{background:var(--error);border:1px solid var(--errorBorder);border-left:4px solid #d6483a;padding:14px 16px;border-radius:10px;margin:14px 0;text-align:left;font-size:15px;color:#7a2418;display:none;word-break:break-word}
+.errbox.show{display:block}
+footer{padding:0 20px 36px;color:var(--muted);font-size:14px;text-align:center}
+@media(max-width:600px){
+  h1{font-size:28px} section{padding:24px 20px}
+  .btn{display:block;width:100%}
+}
+</style>
+
+</head>
+<body>
+<header><div class="wrap"><h1>邮箱验证</h1><div class="subtitle">点粤语 - 注册账号验证结果</div></div></header>
+<main>
+<section id="card">
+  <div id="icon" class="icon" aria-hidden="true">…</div>
+  <h2 id="title">正在处理…</h2>
+  <p id="desc" class="muted">请稍候。</p>
+
+  <div id="errorBox" class="errbox" role="alert"></div>
+
+  <div class="btnwrap">
+    <a id="returnApp" class="btn" href="dianyueyu://email-confirmed">返回「点粤语」App</a>
+  </div>
+
+  <p class="muted" id="hint" style="margin-top:24px;font-size:13px">
+    如果按钮无法打开 App,请手动回到「点粤语」并使用邮箱和密码登录。
+  </p>
+</section>
+</main>
+<footer>© 2026 点粤语 · 开发者 牟文清（MU Wenqing）</footer>
+
+<script>
+(function () {
+  // Supabase 验证完成后跳到这里时:
+  // - 成功:URL 上通常带 ?code=...(PKCE code),这里不解析,不透传,
+  //   只负责展示「成功」文案。
+  // - 失败:URL 上带 ?error=...&error_description=...&error_code=...
+  //   (例如 otp_expired),展示明确失败文案。
+  //
+  // 「返回 App」按钮只做一件事:跳到 dianyueyu://email-confirmed,
+  // 不带任何 query / hash,不在 App 端触发 supabase.auth.session(from:)。
+  // 用户回到 App 后继续走原有的邮箱 + 密码 signIn 流程。
+
+  var params = new URLSearchParams(window.location.search);
+  var error = params.get('error');
+  var errorCode = params.get('error_code');
+  var errorDesc = params.get('error_description');
+
+  var iconEl = document.getElementById('icon');
+  var titleEl = document.getElementById('title');
+  var descEl = document.getElementById('desc');
+  var errBox = document.getElementById('errorBox');
+  var hintEl = document.getElementById('hint');
+
+  if (error || errorDesc || errorCode) {
+    // 失败
+    iconEl.textContent = '✕';
+    iconEl.className = 'icon fail';
+    titleEl.textContent = '邮箱验证失败';
+    titleEl.style.color = '#d6483a';
+    descEl.textContent = '邮箱验证失败或链接已过期,请返回 App 重新注册或获取新的验证邮件。';
+    descEl.className = '';
+    errBox.classList.add('show');
+    var parts = [];
+    if (errorCode) parts.push('错误代码: ' + errorCode);
+    if (error) parts.push('错误类型: ' + error);
+    if (errorDesc) parts.push('说明: ' + decodeURIComponent(errorDesc.replace(/\+/g, ' ')));
+    if (parts.length === 0) parts.push('请稍后重试,或联系客服。');
+    errBox.innerHTML = parts.join('<br>');
+    hintEl.textContent = '如果按钮无法打开 App,请手动切换回「点粤语」并重新发起注册。';
+    document.title = '邮箱验证失败 - 点粤语';
+  } else {
+    // 成功
+    iconEl.textContent = '✓';
+    iconEl.className = 'icon success';
+    titleEl.textContent = '邮箱验证成功';
+    titleEl.style.color = 'var(--green)';
+    descEl.textContent = '请返回「点粤语」App 登录';
+    descEl.className = '';
+    document.title = '邮箱验证成功 - 点粤语';
+  }
+})();
+</script>
+
+</body>
+</html>
